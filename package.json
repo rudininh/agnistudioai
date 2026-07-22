@@ -1,0 +1,19 @@
+{
+  "name": "agni-studio-ai",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI Content Operating System monorepo.",
+  "workspaces": [
+    "apps/web",
+    "packages/*"
+  ],
+  "scripts": {
+    "web:dev": "npm run dev --workspace=@agni/web",
+    "web:build": "npm run build --workspace=@agni/web",
+    "web:typecheck": "npm run typecheck --workspace=@agni/web"
+  },
+  "engines": {
+    "node": ">=22",
+    "npm": ">=10"
+  }
+}
