@@ -1,4 +1,3 @@
-
 <?php
 
 namespace App\Models;
@@ -10,9 +9,9 @@ class UserEloquent extends Model
 {
     use SoftDeletes;
 
-    protected \ = 'users';
+    protected $table = 'users';
 
-    protected \ = [
+    protected $fillable = [
         'id',
         'first_name',
         'last_name',
@@ -21,15 +20,15 @@ class UserEloquent extends Model
         'is_active',
         'is_verified',
         'email_verified_at',
-        'last_login_at'
+        'last_login_at',
     ];
 
-    protected \ = [
+    protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    protected \ = [
+    protected $casts = [
         'email_verified_at' => 'datetime',
         'last_login_at' => 'datetime',
         'created_at' => 'datetime',

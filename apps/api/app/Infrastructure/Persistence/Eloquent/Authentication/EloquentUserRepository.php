@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Infrastructure\Persistence\Eloquent\Authentication;
 
@@ -7,8 +7,6 @@ use App\Domain\Authentication\Repositories\UserRepository;
 use App\Domain\Authentication\ValueObjects\Email;
 use App\Domain\Authentication\ValueObjects\Password;
 use Illuminate\Support\Facades\DB;
-use Ramsey\Uuid\Uuid;
-use DateTimeImmutable;
 
 class EloquentUserRepository implements UserRepository
 {
@@ -18,26 +16,26 @@ class EloquentUserRepository implements UserRepository
     public function findById(string $id): ?User
     {
         $model = DB::table('users')->where('id', $id)->first();
-        
-        if (!$model) {
+
+        if (! $model) {
             return null;
         }
-        
-        return $this->modelToEntity($model);
+
+        return $this->modelToEntity((array) $model);
     }
 
     /**
      * Find a user by their email.
      */
-    public function findByEmail(string $email): ?User
+    public function findByEmail(Email $email): ?User
     {
-        $model = DB::table('users')->where('email', $email)->first();
-        
-        if (!$model) {
+        $model = DB::table('users')->where('email', $email->getValue())->first();
+
+        if (! $model) {
             return null;
         }
-        
-        return $this->modelToEntity($model);
+
+        return $this->modelToEntity((array) $model);
     }
 
     /**
@@ -48,9 +46,9 @@ class EloquentUserRepository implements UserRepository
         if (empty($ids)) {
             return [];
         }
-        
+
         $models = DB::table('users')->whereIn('id', $ids)->get();
-        
+
         return array_map([$this, 'modelToEntity'], $models->toArray());
     }
 
@@ -69,7 +67,7 @@ class EloquentUserRepository implements UserRepository
             'is_verified' => $user->isVerified(),
             'email_verified_at' => $user->getEmailVerifiedAt()?->format('Y-m-d H:i:s'),
             'last_login_at' => $user->getLastLoginAt()?->format('Y-m-d H:i:s'),
-            'updated_at' => now()
+            'updated_at' => now(),
         ];
 
         // Check if user exists
@@ -103,38 +101,32 @@ class EloquentUserRepository implements UserRepository
     }
 
     /**
+     * Find all users with limit and offset.
+     */
+    public function findAll(int $limit = 20, int $offset = 0): array
+    {
+        $models = DB::table('users')
+            ->offset($offset)
+            ->limit($limit)
+            ->get();
+
+        return array_map([$this, 'modelToEntity'], $models->toArray());
+    }
+
+    /**
+     * Check if a user exists by email.
+     */
+    public function existsByEmail(Email $email): bool
+    {
+        return DB::table('users')->where('email', $email->getValue())->exists();
+    }
+
+    /**
      * Convert a database model to a domain entity.
      */
     private function modelToEntity(array $model): User
     {
-        // Create a password object from the hash
-        // We need to check if Password class has a constructor or method to create from hash
-        // For now, we'll create a temporary password and then set the hash directly if possible
-        // But since Password encapsulates the hash, we need to see how to handle this
-        
-        // Let's assume we can create a Password from hash - if not, we'll need to adjust
-        $passwordObject = new Password('temp12345!'); // Temporary password
-        // If Password has a way to set the hash directly, we would do it here
-        // For now, we'll have to work with what we have
-        
-        $user = new User(
-            $model['first_name'],
-            $model['last_name'],
-            $model['email'],
-            'temp12345!', // This will be hashed in constructor
-            Uuid::fromString($model['id']),
-            ($model['is_active'] ?? false),
-            ($model['is_verified'] ?? false),
-            !empty($model['email_verified_at']) ? DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $model['email_verified_at']) : null,
-            !empty($model['last_login_at']) ? DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $model['last_login_at']) : null
-        );
-        
-        // If we can't set the hash directly, we have a problem
-        // Let's check if Password has a way to inject the hash
-        
-        // For now, we'll return the user as is, knowing the password won't match
-        // In a real implementation, we'd need to modify the Password or User class
-        
-        return $user;
+        // Use the factory method to create user from persistence data
+        return User::createFromPersistence($model);
     }
 }

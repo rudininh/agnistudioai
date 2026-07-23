@@ -1,17 +1,21 @@
-﻿<?php
+<?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Api\WorkspaceController;
-use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\ContentIdeaController;
 use App\Http\Controllers\Api\ContentItemController;
+use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\ScheduledPostController;
 use App\Http\Controllers\Api\TestController;
+use App\Http\Controllers\Api\WorkspaceController;
+use Illuminate\Support\Facades\Route;
 
-// Authentication routes
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+// Authentication routes with rate limiting
+Route::post('/register', [AuthController::class, 'register'])
+    ->middleware('throttle:5,1'); // 5 attempts per minute
+
+Route::post('/login', [AuthController::class, 'login'])
+    ->middleware('throttle:5,1'); // 5 attempts per minute
+
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('auth:sanctum');
 Route::get('/user', [AuthController::class, 'user'])->middleware('auth:sanctum');

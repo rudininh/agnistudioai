@@ -6,45 +6,42 @@ use InvalidArgumentException;
 
 final class Email
 {
-    private string \;
+    private string $email;
 
-    public function __construct(string \)
+    public function __construct(string $email)
     {
-        \->email = \->validateAndNormalize(\);
+        $this->email = $this->validateAndNormalize($email);
     }
 
-    private function validateAndNormalize(string \): string
+    private function validateAndNormalize(string $email): string
     {
-        \ = trim(\);
-
-        if (\ === '') {
+        $email = trim($email);
+        if ($email === '') {
             throw new InvalidArgumentException('Email cannot be empty');
         }
-
-        if (!filter_var(\, FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
             throw new InvalidArgumentException('Invalid email format');
         }
-
         // Additional length check
-        if (strlen(\) > 255) {
+        if (strlen($email) > 255) {
             throw new InvalidArgumentException('Email is too long');
         }
 
-        return strtolower(\);
+        return strtolower($email);
     }
 
     public function getValue(): string
     {
-        return \->email;
+        return $this->email;
     }
 
     public function __toString(): string
     {
-        return \->email;
+        return $this->email;
     }
 
-    public function equals(Email \): bool
+    public function equals(Email $email): bool
     {
-        return \->email === \->email;
+        return $this->email === $email->email;
     }
 }

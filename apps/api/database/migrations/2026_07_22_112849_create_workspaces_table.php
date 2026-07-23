@@ -13,21 +13,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('workspaces', function (Blueprint $table) {
-       $table->uuid('id')->primary();
-       $table->foreignId('owner_id')->constrained('users')->onDelete('cascade');
-       $table->string('name');
-       $table->string('slug')->unique();
-       $table->text('description')->nullable();
-       $table->boolean('is_active')->default(true);
-       $table->json('settings')->default(json_encode([
-               'timezone' => 'UTC',
-               'dateFormat' => 'Y-m-d',
-               'timeFormat' => 'H:i',
-               'notificationPreference' => 'email',
-               'defaultView' => 'dashboard'
-           ]));
-       $table->timestamps();
-       $table->softDeletes();
+            $table->uuid('id')->primary();
+            $table->foreignId('owner_id')->constrained('users')->onDelete('cascade');
+            $table->string('name');
+            $table->string('slug')->unique();
+            $table->text('description')->nullable();
+            $table->boolean('is_active')->default(true);
+            $table->json('settings')->default(json_encode([
+                'timezone' => 'UTC',
+                'dateFormat' => 'Y-m-d',
+                'timeFormat' => 'H:i',
+                'notificationPreference' => 'email',
+                'defaultView' => 'dashboard',
+            ]));
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -39,4 +39,3 @@ return new class extends Migration
         Schema::dropIfExists('workspaces');
     }
 };
-

@@ -1,35 +1,75 @@
-
 <?php
 
 namespace App\Domain\Workspace\Services;
 
+use App\Domain\Authentication\Repositories\EloquentUserRepository;
 use App\Domain\Workspace\Entities\Workspace;
 use App\Domain\Workspace\Entities\WorkspaceMember;
-use App\Domain\Authentication\Entities\User;
+use App\Domain\Workspace\Repositories\EloquentWorkspaceMemberRepository;
+use App\Domain\Workspace\Repositories\EloquentWorkspaceRepository;
+use Ramsey\Uuid\Uuid;
 
-interface WorkspaceService
+class WorkspaceService implements WorkspaceServiceInterface
 {
-    public function createWorkspace(string \, string \, string \, ?string \ = null): Workspace;
-    
-    public function getWorkspace(string \): ?Workspace;
-    
-    public function getWorkspaceBySlug(string \): ?Workspace;
-    
-    public function updateWorkspace(string \, string \, ?string \ = null): Workspace;
-    
-    public function deleteWorkspace(string \): void;
-    
-    public function inviteUser(string \, string \, string \): WorkspaceMember;
-    
-    public function removeUser(string \, string \): void;
-    
-    public function changeUserRole(string \, string \, string \): WorkspaceMember;
-    
-    public function getWorkspaceMembers(string \): array;
-    
-    public function getUserWorkspaces(string \): array;
-    
-    public function userCanAccessWorkspace(string \, string \): bool;
-    
-    public function userCanManageWorkspace(string \, string \): bool;
+    protected $workspaceRepository;
+
+    protected $workspaceMemberRepository;
+
+    protected $userRepository;
+
+    public function __construct(
+        EloquentWorkspaceRepository $workspaceRepository,
+        EloquentWorkspaceMemberRepository $workspaceMemberRepository,
+        EloquentUserRepository $userRepository
+    ) {
+        $this->workspaceRepository = $workspaceRepository;
+        $this->workspaceMemberRepository = $workspaceMemberRepository;
+        $this->userRepository = $userRepository;
+    }
+
+    public function createWorkspace(string $name, string $description, string $ownerId): Workspace
+    {
+        // Create the workspace
+        $workspace = new Workspace($name, $description, Uuid::fromString($ownerId));
+        // Save the workspace
+        $this->workspaceRepository->save($workspace);
+        // Add the owner as a member with owner role
+        $this->workspaceMemberRepository->save(
+            WorkspaceMember::fromArray([
+                'workspace_id' => $workspace->getId()->toString(),
+                'user_id' => $ownerId,
+                'role' => 'owner',
+            ])
+        );
+
+        return $workspace;
+    }
+
+    public function updateWorkspace(Workspace $workspace, string $name, ?string $description): Workspace
+    {
+        if ($name) {
+            $workspace->setName($name);
+        }
+        if ($description !== null) {
+            $workspace->setDescription($description);
+        }
+        $this->workspaceRepository->save($workspace);
+
+        return $workspace;
+    }
+
+    public function deleteWorkspace(Workspace $workspace): void
+    {
+        $this->workspaceRepository->delete($workspace);
+    }
+
+    public function getWorkspaceById(string $workspaceId): ?Workspace
+    {
+        return $this->workspaceRepository->findById($workspaceId);
+    }
+
+    public function getWorkspacesByOwnerId(string $ownerId): array
+    {
+        return $this->workspaceRepository->findByOwnerId($ownerId);
+    }
 }

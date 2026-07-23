@@ -1,152 +1,158 @@
-
 <?php
 
 namespace App\Domain\Workspace\Entities;
 
+use App\Domain\Authentication\Entities\User;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use App\Domain\Authentication\Entities\User;
 
 class Workspace implements \JsonSerializable
 {
-    private UuidInterface \;
-    private string \;
-    private string \;
-    private ?string \;
-    private UuidInterface \;
-    private bool \;
-    private DateTimeImmutable \;
-    private ?DateTimeImmutable \;
-    private array \ = [];
+    private UuidInterface $id;
+
+    private string $name;
+
+    private string $slug;
+
+    private ?string $description;
+
+    private UuidInterface $ownerId;
+
+    private bool $isActive;
+
+    private DateTimeImmutable $createdAt;
+
+    private ?DateTimeImmutable $updatedAt;
+
+    private array $settings = [];
 
     public function __construct(
-        string \,
-        string \,
-        UuidInterface \,
-        ?string \ = null,
-        ?UuidInterface \ = null,
-        ?DateTimeImmutable \ = null
+        string $name,
+        string $description,
+        UuidInterface $ownerId,
+        ?string $id = null,
+        ?UuidInterface $slug = null,
+        ?DateTimeImmutable $createdAt = null
     ) {
-        \->id = \ ?? Uuid::uuid4();
-        \->name = trim(\);
-        \->slug = \->generateSlug(\);
-        \->description = \ ? trim(\) : null;
-        \->ownerId = \;
-        \->isActive = true;
-        \->createdAt = \ ?? new DateTimeImmutable();
-        \->updatedAt = clone \->createdAt;
-        \->settings = [
+        $this->id = $id ?? Uuid::uuid4();
+        $this->name = trim($name);
+        $this->slug = $this->generateSlug($name);
+        $this->description = $description ? trim($description) : null;
+        $this->ownerId = $ownerId;
+        $this->isActive = true;
+        $this->createdAt = $createdAt ?? new DateTimeImmutable;
+        $this->updatedAt = clone $this->createdAt;
+        $this->settings = [
             'timezone' => 'UTC',
             'dateFormat' => 'Y-m-d',
             'timeFormat' => 'H:i',
             'notificationPreference' => 'email',
-            'defaultView' => 'dashboard'
+            'defaultView' => 'dashboard',
         ];
     }
 
-    private function generateSlug(string \): string
+    private function generateSlug(string $name): string
     {
-        \ = strtolower(trim(\));
-        \ = preg_replace('/[^a-z0-9-]/', '-', \);
-        \ = preg_replace('/-+/', '-', \);
-        \ = trim(\, '-');
-
-        if (\ === '') {
-            throw new \\InvalidArgumentException('Slug cannot be empty after processing');
+        $slug = strtolower(trim($name));
+        $slug = preg_replace('/[^a-z0-9-]/', '-', $slug);
+        $slug = preg_replace('/-+/', '-', $slug);
+        $slug = trim($slug, '-');
+        if ($slug === '') {
+            throw new \InvalidArgumentException('Slug cannot be empty after processing');
         }
 
-        return \;
+        return $slug;
     }
 
     // Getters
     public function getId(): UuidInterface
     {
-        return \->id;
+        return $this->id;
     }
 
     public function getName(): string
     {
-        return \->name;
+        return $this->name;
     }
 
     public function getSlug(): string
     {
-        return \->slug;
+        return $this->slug;
     }
 
     public function getDescription(): ?string
     {
-        return \->description;
+        return $this->description;
     }
 
     public function getOwnerId(): UuidInterface
     {
-        return \->ownerId;
+        return $this->ownerId;
     }
 
     public function isActive(): bool
     {
-        return \->isActive;
+        return $this->isActive;
     }
 
     public function getCreatedAt(): DateTimeInterface
     {
-        return \->createdAt;
+        return $this->createdAt;
     }
 
     public function getUpdatedAt(): ?DateTimeInterface
     {
-        return \->updatedAt;
+        return $this->updatedAt;
     }
 
     public function getSettings(): array
     {
-        return \->settings;
+        return $this->settings;
     }
 
-    public function getSetting(string \, mixed \ = null): mixed
+    public function getSetting(string $key, mixed $default = null): mixed
     {
-        return \->settings[\] ?? \;
+        return $this->settings[$key] ?? $default;
     }
 
     // Setters
-    public function setName(string \): void
+    public function setName(string $name): void
     {
-        \->name = trim(\);
-        \->updatedAt = new DateTimeImmutable();
+        $this->name = trim($name);
+        $this->updatedAt = new DateTimeImmutable;
     }
 
-    public function setDescription(?string \): void
+    public function setDescription(?string $description): void
     {
-        \->description = \ ? trim(\) : null;
-        \->updatedAt = new DateTimeImmutable();
+        $this->description = $description ? trim($description) : null;
+        $this->updatedAt = new DateTimeImmutable;
     }
 
-    public function setSetting(string \, mixed \): void
+    public function setSetting(string $key, mixed $value): void
     {
-        \->settings[\] = \;
-        \->updatedAt = new DateTimeImmutable();
+        $this->settings[$key] = $value;
+        $this->updatedAt = new DateTimeImmutable;
     }
 
     public function activate(): void
     {
-        \->isActive = true;
-        \->updatedAt = new DateTimeImmutable();
+        $this->isActive = true;
+        $this->updatedAt = new DateTimeImmutable;
     }
 
     public function deactivate(): void
     {
-        \->isActive = false;
-        \->updatedAt = new DateTimeImmutable();
+        $this->isActive = false;
+        $this->updatedAt = new DateTimeImmutable;
     }
 
     // Business Methods
-    public function canBeManagedBy(User \): bool
+    public function canBeManagedBy(User $user): bool
     {
         // Owner can always manage
-        if (\->getId()->equals(\->ownerId)) {
+        if ($this->getId()->equals($user->getId())) {
             return true;
         }
 
@@ -155,9 +161,9 @@ class Workspace implements \JsonSerializable
         return false;
     }
 
-    public function canBeAccessedBy(User \): bool
+    public function canBeAccessedBy(User $user): bool
     {
-        if (->canBeManagedBy(\)) {
+        if ($this->canBeManagedBy($user)) {
             return true;
         }
 
@@ -169,27 +175,27 @@ class Workspace implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return [
-            'id' => \->id->toString(),
-            'name' => \->name,
-            'slug' => \->slug,
-            'description' => \->description,
-            'ownerId' => \->ownerId->toString(),
-            'isActive' => \->isActive,
-            'createdAt' => \->createdAt->toISO8601(),
-            'updatedAt' => \->updatedAt?->toISO8601(),
-            'settings' => \->settings
+            'id' => $this->id->toString(),
+            'name' => $this->name,
+            'slug' => $this->slug,
+            'description' => $this->description,
+            'ownerId' => $this->ownerId->toString(),
+            'isActive' => $this->isActive,
+            'createdAt' => $this->createdAt->toISO8601(),
+            'updatedAt' => $this->updatedAt?->toISO8601(),
+            'settings' => $this->settings,
         ];
     }
 
     // Equality
-    public function equals(self \): bool
+    public function equals(self $other): bool
     {
-        return \->id->equals(\->getId());
+        return $this->id->equals($other->getId());
     }
 
     // String representation
     public function __toString(): string
     {
-        return \->name;
+        return $this->name;
     }
 }

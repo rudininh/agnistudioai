@@ -2,214 +2,297 @@
 
 namespace App\Domain\Authentication\Entities;
 
+use App\Domain\Authentication\ValueObjects\Email;
+use App\Domain\Authentication\ValueObjects\Password;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use App\Domain\Authentication\ValueObjects\Email;
-use App\Domain\Authentication\ValueObjects\Password;
 
 class User
 {
-    private UuidInterface \;
-    private string \;
-    private string \;
-    private Email \;
-    private Password \;
-    private bool \;
-    private bool \;
-    private ?DateTimeInterface \;
-    private ?DateTimeInterface \;
-    private DateTimeImmutable \;
-    private DateTimeImmutable \;
+    private UuidInterface $id;
+
+    private string $firstName;
+
+    private string $lastName;
+
+    private Email $email;
+
+    private Password $password;
+
+    private bool $isActive;
+
+    private bool $isVerified;
+
+    private ?DateTimeInterface $emailVerifiedAt;
+
+    private ?DateTimeInterface $lastLoginAt;
+
+    private DateTimeImmutable $createdAt;
+
+    private DateTimeImmutable $updatedAt;
 
     public function __construct(
-        string \,
-        string \,
-        string \,
-        string \
+        string $firstName,
+        string $lastName,
+        string $email,
+        string $password
     ) {
-        \->id = Uuid::uuid4();
-        \->firstName = trim(\);
-        \->lastName = trim(\);
-        \->email = new Email(\);
-        \->password = new Password(\);
-        \->isActive = true;
-        \->isVerified = false;
-        \->emailVerifiedAt = null;
-        \->lastLoginAt = null;
-        \->createdAt = new DateTimeImmutable();
-        \->updatedAt = new DateTimeImmutable();
+        $this->id = Uuid::uuid4();
+        $this->firstName = trim($firstName);
+        $this->lastName = trim($lastName);
+        $this->email = new Email($email);
+        $this->password = Password::fromPlainText($password);
+        $this->isActive = true;
+        $this->isVerified = false;
+        $this->emailVerifiedAt = null;
+        $this->lastLoginAt = null;
+        $this->createdAt = new DateTimeImmutable;
+        $this->updatedAt = new DateTimeImmutable;
     }
 
     // Getters
     public function getId(): UuidInterface
     {
-        return \->id;
+        return $this->id;
     }
 
     public function getFirstName(): string
     {
-        return \->firstName;
+        return $this->firstName;
     }
 
     public function getLastName(): string
     {
-        return \->lastName;
+        return $this->lastName;
     }
 
     public function getFullName(): string
     {
-        return trim(\->firstName . ' ' . \->lastName);
+        return trim($this->firstName.' '.$this->lastName);
     }
 
     public function getEmail(): Email
     {
-        return \->email;
+        return $this->email;
+    }
+
+    public function getPassword(): Password
+    {
+        return $this->password;
     }
 
     public function getEmailValue(): string
     {
-        return \->email->getValue();
+        return $this->email->getValue();
     }
 
     public function isActive(): bool
     {
-        return \->isActive;
+        return $this->isActive;
     }
 
     public function isVerified(): bool
     {
-        return \->isVerified;
+        return $this->isVerified;
     }
 
     public function getEmailVerifiedAt(): ?DateTimeInterface
     {
-        return \->emailVerifiedAt;
+        return $this->emailVerifiedAt;
     }
 
     public function getLastLoginAt(): ?DateTimeInterface
     {
-        return \->lastLoginAt;
+        return $this->lastLoginAt;
     }
 
     public function getCreatedAt(): DateTimeImmutable
     {
-        return \->createdAt;
+        return $this->createdAt;
     }
 
     public function getUpdatedAt(): DateTimeImmutable
     {
-        return \->updatedAt;
+        return $this->updatedAt;
     }
 
     // Setters
-    public function setFirstName(string \): void
+    public function setFirstName(string $firstName): void
     {
-        \->firstName = trim(\);
-        \->updatedAt = new DateTimeImmutable();
+        $this->firstName = trim($firstName);
+        $this->updatedAt = new DateTimeImmutable;
     }
 
-    public function setLastName(string \): void
+    public function setLastName(string $lastName): void
     {
-        \->lastName = trim(\);
-        \->updatedAt = new DateTimeImmutable();
+        $this->lastName = trim($lastName);
+        $this->updatedAt = new DateTimeImmutable;
     }
 
-    public function setEmail(string \): void
+    public function setEmail(string $email): void
     {
-        \->email = new Email(\);
-        \->updatedAt = new DateTimeImmutable();
+        $this->email = new Email($email);
+        $this->updatedAt = new DateTimeImmutable;
     }
 
-    public function setPassword(string \): void
+    public function setPassword(string $password): void
     {
-        \->password = new Password(\);
-        \->updatedAt = new DateTimeImmutable();
+        $this->password = Password::fromPlainText($password);
+        $this->updatedAt = new DateTimeImmutable;
     }
 
     public function activate(): void
     {
-        \->isActive = true;
-        \->updatedAt = new DateTimeImmutable();
+        $this->isActive = true;
+        $this->updatedAt = new DateTimeImmutable;
     }
 
     public function deactivate(): void
     {
-        \->isActive = false;
-        \->updatedAt = new DateTimeImmutable();
+        $this->isActive = false;
+        $this->updatedAt = new DateTimeImmutable;
     }
 
     public function verifyEmail(): void
     {
-        \->isVerified = true;
-        \->emailVerifiedAt = new DateTimeImmutable();
-        \->updatedAt = new DateTimeImmutable();
+        $this->isVerified = true;
+        $this->emailVerifiedAt = new DateTimeImmutable;
+        $this->updatedAt = new DateTimeImmutable;
+    }
+
+    public function setIsVerified(bool $isVerified): void
+    {
+        $this->isVerified = $isVerified;
+        $this->updatedAt = new DateTimeImmutable;
+
+        // If setting to false, clear the verification timestamp
+        if (! $isVerified) {
+            $this->emailVerifiedAt = null;
+        }
+
+        // If setting to true and no timestamp exists, set it now
+        if ($isVerified && ! $this->emailVerifiedAt) {
+            $this->emailVerifiedAt = new DateTimeImmutable;
+        }
+    }
+
+    public function setEmailVerifiedAt(?DateTimeInterface $dateTime): void
+    {
+        $this->emailVerifiedAt = $dateTime;
+        $this->updatedAt = new DateTimeImmutable;
+
+        // If we set a timestamp, ensure isVerified is true
+        if ($dateTime) {
+            $this->isVerified = true;
+        }
+    }
+
+    public function setIsActive(bool $isActive): void
+    {
+        $this->isActive = $isActive;
+        $this->updatedAt = new DateTimeImmutable;
+    }
+
+    public function setLastLoginAt(?DateTimeInterface $dateTime): void
+    {
+        $this->lastLoginAt = $dateTime;
+        $this->updatedAt = new DateTimeImmutable;
     }
 
     public function updateLastLogin(): void
     {
-        \->lastLoginAt = new DateTimeImmutable();
-        \->updatedAt = new DateTimeImmutable();
+        $this->lastLoginAt = new DateTimeImmutable;
+        $this->updatedAt = new DateTimeImmutable;
     }
 
     public function updateTimestamp(): void
     {
-        \->updatedAt = new DateTimeImmutable();
+        $this->updatedAt = new DateTimeImmutable;
+    }
+
+    // Factory method for hydration
+    public static function createFromPersistence(array $data): self
+    {
+        // Create a temporary user with dummy data (will be overridden)
+        $user = new self(
+            $data['first_name'],
+            $data['last_name'],
+            $data['email'],
+            'temporary_password' // Will be replaced
+        );
+        // Override all properties with actual values from the database
+        $user->id = Uuid::fromString($data['id']);
+        $user->password = Password::fromHash($data['password']);
+        $user->isActive = (bool) ($data['is_active'] ?? false);
+        $user->isVerified = (bool) ($data['is_verified'] ?? false);
+        $user->emailVerifiedAt = ! empty($data['email_verified_at'])
+            ? DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $data['email_verified_at'])
+            : null;
+        $user->lastLoginAt = ! empty($data['last_login_at'])
+            ? DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $data['last_login_at'])
+            : null;
+        $user->createdAt = ! empty($data['created_at'])
+            ? DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $data['created_at'])
+            : new DateTimeImmutable;
+        $user->updatedAt = ! empty($data['updated_at'])
+            ? DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $data['updated_at'])
+            : new DateTimeImmutable;
+
+        return $user;
     }
 
     // Domain Methods
-    public function changeName(string \, string \): void
+    public function changeName(string $firstName, string $lastName): void
     {
-        \->setFirstName(\);
-        \->setLastName(\);
+        $this->setFirstName($firstName);
+        $this->setLastName($lastName);
     }
 
-    public function changeEmail(string \): void
+    public function changeEmail(string $email): void
     {
-        \->setEmail(\);
+        $this->setEmail($email);
         // When email changes, verification status should be reset
-        \->isVerified = false;
-        \->emailVerifiedAt = null;
-        \->updatedAt = new DateTimeImmutable();
+        $this->isVerified = false;
+        $this->emailVerifiedAt = null;
+        $this->updatedAt = new DateTimeImmutable;
     }
 
-    public function changePassword(string \): void
+    public function changePassword(string $password): void
     {
-        \->setPassword(\);
-        \->updatedAt = new DateTimeImmutable();
+        $this->setPassword($password);
+        $this->updatedAt = new DateTimeImmutable;
     }
 
     // Authentication Methods
-    public function authenticate(string \): bool
+    public function authenticate(string $password): bool
     {
-        if (!\->isActive()) {
+        if (! $this->isActive()) {
             return false;
         }
-
-        \ = \->password->verify(\);
-
-        if (\) {
-            \->updateLastLogin();
+        $result = $this->password->verify($password);
+        if ($result) {
+            $this->updateLastLogin();
         }
 
-        return \;
+        return $result;
     }
 
     public function needsPasswordReset(): bool
     {
-        return \->password->needsRehash();
+        return $this->password->needsRehash();
     }
 
     // Equality
-    public function equals(self \): bool
+    public function equals(self $other): bool
     {
-        return \->id->equals(\->getId());
+        return $this->id->equals($other->getId());
     }
 
     // String representation
     public function __toString(): string
     {
-        return \->getFullName() . ' <' . \->getEmailValue() . '>';
+        return $this->getFullName().' <'.$this->getEmailValue().'>';
     }
 }

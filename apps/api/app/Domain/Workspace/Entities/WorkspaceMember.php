@@ -6,31 +6,41 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use Ramsey\Uuid\Uuid;
 use Ramsey\Uuid\UuidInterface;
-use App\Domain\Authentication\Entities\User;
 
 class WorkspaceMember
 {
     private UuidInterface $id;
+
     private UuidInterface $workspaceId;
+
     private UuidInterface $userId;
+
     private string $role;
+
     private bool $isActive;
+
     private ?DateTimeImmutable $leftAt;
+
     private DateTimeImmutable $joinedAt;
+
     private DateTimeImmutable $createdAt;
+
     private DateTimeImmutable $updatedAt;
 
     // Role constants
     public const ROLE_OWNER = 'owner';
+
     public const ROLE_ADMIN = 'admin';
+
     public const ROLE_MEMBER = 'member';
+
     public const ROLE_VIEWER = 'viewer';
 
     private array $validRoles = [
         self::ROLE_OWNER,
         self::ROLE_ADMIN,
         self::ROLE_MEMBER,
-        self::ROLE_VIEWER
+        self::ROLE_VIEWER,
     ];
 
     public function __construct(
@@ -40,18 +50,17 @@ class WorkspaceMember
         ?UuidInterface $id = null,
         ?DateTimeImmutable $joinedAt = null
     ) {
-        if (!in_array($role, $this->validRoles, true)) {
+        if (! in_array($role, $this->validRoles, true)) {
             throw new \InvalidArgumentException("Invalid role: {$role}");
         }
-
         $this->id = $id ?? Uuid::uuid4();
         $this->workspaceId = $workspaceId;
         $this->userId = $userId;
         $this->role = $role;
         $this->isActive = true;
-        $this->joinedAt = $joinedAt ?? new DateTimeImmutable();
+        $this->joinedAt = $joinedAt ?? new DateTimeImmutable;
         $this->leftAt = null;
-        $this->createdAt = new DateTimeImmutable();
+        $this->createdAt = new DateTimeImmutable;
         $this->updatedAt = clone $this->createdAt;
     }
 
@@ -104,26 +113,25 @@ class WorkspaceMember
     // Setters
     public function setRole(string $role): void
     {
-        if (!in_array($role, $this->validRoles, true)) {
+        if (! in_array($role, $this->validRoles, true)) {
             throw new \InvalidArgumentException("Invalid role: {$role}");
         }
-
         $this->role = $role;
-        $this->updatedAt = new DateTimeImmutable();
+        $this->updatedAt = new DateTimeImmutable;
     }
 
     public function deactivate(): void
     {
         $this->isActive = false;
-        $this->leftAt = new DateTimeImmutable();
-        $this->updatedAt = new DateTimeImmutable();
+        $this->leftAt = new DateTimeImmutable;
+        $this->updatedAt = new DateTimeImmutable;
     }
 
     public function reactivate(): void
     {
         $this->isActive = true;
         $this->leftAt = null;
-        $this->updatedAt = new DateTimeImmutable();
+        $this->updatedAt = new DateTimeImmutable;
     }
 
     // Role Checking Methods
@@ -165,12 +173,10 @@ class WorkspaceMember
     // Utility Methods
     public function belongsToUser(UuidInterface $userId): bool
     {
-        return $this->userId->equals($userId));
-    {
         return $this->userId->equals($userId);
     }
 
-    public function belongsToWorkspace(UoidInterface $workspaceIdfalse);
+    public function belongsToWorkspace(UuidInterface $workspaceId): bool
     {
         return $this->workspaceId->equals($workspaceId);
     }
@@ -187,12 +193,12 @@ class WorkspaceMember
             'joinedAt' => $this->joinedAt->toISO8601(),
             'leftAt' => $this->leftAt?->toISO8601(),
             'createdAt' => $this->createdAt->toISO8601(),
-            'updatedAt' => $this->updatedAt->toISO8601()
+            'updatedAt' => $this->updatedAt->toISO8601(),
         ];
     }
 
     // Equality
-    public function equals(self $otherworkspaceId**this->id->equals($other->getId()));
+    public function equals(self $other): bool
     {
         return $this->id->equals($other->getId());
     }

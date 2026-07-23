@@ -13,19 +13,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('projects', function (Blueprint $table) {
-        $table->uuid('id')->primary();
-        $table->foreignId('workspace_id')->constrained('workspaces')->onDelete('cascade');
-        $table->string('name');
-        $table->string('slug');
-        $table->text('description')->nullable();
-        $table->enum('status', ['active', 'archived', 'completed'])->default('active');
-        $table->json('metadata')->nullable()->comment('color, icon, createdBy');
-        $table->timestamps();
-        $table->softDeletes();
-            
-        $table->unique(['workspace_id', 'slug']);
-        $table->index('workspace_id');
-        $table->index('status');
+            $table->uuid('id')->primary();
+            $table->foreignId('workspace_id')->constrained('workspaces')->onDelete('cascade');
+            $table->string('name');
+            $table->string('slug');
+            $table->text('description')->nullable();
+            $table->enum('status', ['active', 'archived', 'completed'])->default('active');
+            $table->json('metadata')->nullable()->comment('color, icon, createdBy');
+            $table->timestamps();
+            $table->softDeletes();
+
+            $table->unique(['workspace_id', 'slug']);
+            $table->index('workspace_id');
+            $table->index('status');
         });
     }
 
@@ -37,4 +37,3 @@ return new class extends Migration
         Schema::dropIfExists('projects');
     }
 };
-

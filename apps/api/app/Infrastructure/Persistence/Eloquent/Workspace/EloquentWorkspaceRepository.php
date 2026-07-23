@@ -1,166 +1,157 @@
-﻿
 <?php
 
 namespace App\Infrastructure\Persistence\Eloquent\Workspace;
 
+use App\Domain\Authentication\Entities\User;
 use App\Domain\Workspace\Entities\Workspace;
 use App\Domain\Workspace\Repositories\WorkspaceRepository;
-use App\Domain\Authentication\Entities\User;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Ramsey\Uuid\Uuid;
-use Illuminate\Database\Eloquent\Model;
 
 class EloquentWorkspaceRepository implements WorkspaceRepository
 {
     /**
      * Find a workspace by its ID.
      */
-    public function findById(string \): ?Workspace
+    public function findById(string $id): ?Workspace
     {
-        \ = DB::table('workspaces')->where('id', \)->first();
-        
-        if (!\) {
+        $data = DB::table('workspaces')->where('id', $id)->first();
+        if (! $data) {
             return null;
         }
-        
-        return ->modelToEntity(\);
+
+        return $this->modelToEntity($data);
     }
 
     /**
      * Find all workspaces owned by a user.
      */
-    public function findByOwnerId(string \): array
+    public function findByOwnerId(string $ownerId): array
     {
-        \ = DB::table('workspaces')
-            ->where('owner_id', \)
+        $data = DB::table('workspaces')
+            ->where('owner_id', $ownerId)
             ->get();
-        
-        return array_map([, 'modelToEntity'], ->toArray());
+
+        return array_map([$this, 'modelToEntity'], $data->toArray());
     }
 
     /**
      * Find workspaces by their IDs.
      */
-    public function findByIds(array \): array
+    public function findByIds(array $ids): array
     {
-        if (empty(\)) {
+        if (empty($ids)) {
             return [];
         }
-        
-        \ = DB::table('workspaces')
-            ->whereIn('id', \)
+        $data = DB::table('workspaces')
+            ->whereIn('id', $ids)
             ->get();
-        
-        return array_map([, 'modelToEntity'], ->toArray());
+
+        return array_map([$this, 'modelToEntity'], $data->toArray());
     }
 
     /**
      * Save a workspace.
      */
-    public function save(Workspace \): void
+    public function save(Workspace $workspace): void
     {
-        \ = [
-            'id' => \->getId()->toString(),
-            'owner_id' => \->getOwnerId()->toString(),
-            'name' => \->getName(),
-            'slug' => \->getSlug(),
-            'description' => \->getDescription(),
-            'is_active' => \->isActive(),
-            'settings' => json_encode(\->getSettings()),
-            'updated_at' => now()
+        $data = [
+            'id' => $workspace->getId()->toString(),
+            'owner_id' => $workspace->getOwnerId()->toString(),
+            'name' => $workspace->getName(),
+            'slug' => $workspace->getSlug(),
+            'description' => $workspace->getDescription(),
+            'is_active' => $workspace->isActive(),
+            'settings' => json_encode($workspace->getSettings()),
+            'updated_at' => now(),
         ];
-
         // Check if workspace exists
-        \ = DB::table('workspaces')
-            ->where('id', \->getId()->toString())
+        $existing = DB::table('workspaces')
+            ->where('id', $workspace->getId()->toString())
             ->first();
-
-        if (\) {
+        if ($existing) {
             // Update existing
             DB::table('workspaces')
-                ->where('id', \->getId()->toString())
-                ->update();
+                ->where('id', $workspace->getId()->toString())
+                ->update($data);
         } else {
             // Insert new
-            \['created_at'] = now();
-            \['updated_at'] = now();
-            DB::table('workspaces')->insert();
+            $data['created_at'] = now();
+            $data['updated_at'] = now();
+            DB::table('workspaces')->insert($data);
         }
     }
 
     /**
      * Delete a workspace.
      */
-    public function delete(Workspace \): void
+    public function delete(Workspace $workspace): void
     {
         DB::table('workspaces')
-            ->where('id', \->getId()->toString())
+            ->where('id', $workspace->getId()->toString())
             ->delete();
     }
 
     /**
      * Check if a workspace slug exists (excluding a specific workspace ID if provided).
      */
-    public function existsBySlug(string \, ?string \ = null): bool
+    public function existsBySlug(string $slug, ?string $excludeId = null): bool
     {
-        \ = DB::table('workspaces')
-            ->where('slug', \);
-
-        if (\) {
-            \->where('id', '!=', \);
+        $query = DB::table('workspaces')
+            ->where('slug', $slug);
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
         }
 
-        return \->exists();
+        return $query->exists();
     }
 
     /**
      * Count workspaces owned by a user.
      */
-    public function countByOwner(string \): int
+    public function countByOwner(string $ownerId): int
     {
         return DB::table('workspaces')
-            ->where('owner_id', \)
+            ->where('owner_id', $ownerId)
             ->count();
     }
 
     /**
      * Find all workspaces with pagination.
      */
-    public function findAll(int \ = 20, int \ = 0): array
+    public function findAll(int $limit = 20, int $offset = 0): array
     {
-        \ = DB::table('workspaces')
-            ->offset()
-            ->limit()
+        $data = DB::table('workspaces')
+            ->offset($offset)
+            ->limit($limit)
             ->get();
-        
-        return array_map([, 'modelToEntity'], ->toArray());
+
+        return array_map([$this, 'modelToEntity'], $data->toArray());
     }
 
     /**
      * Convert a database model to a domain entity.
      */
-    private function modelToEntity(array \): Workspace
+    private function modelToEntity(array $data): Workspace
     {
-        \ = new Workspace(
-            \['name'],
-            \['description'] ?? '',
-            Uuid::fromString(\['owner_id']),
-            \['description'] ?? null,
-            Uuid::fromString(\['id']),
-            isset(\['created_at']) ? \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', \['created_at']) : null
+        $workspace = new Workspace(
+            $data['name'],
+            $data['description'] ?? '',
+            Uuid::fromString($data['owner_id']),
+            $data['description'] ?? null,
+            Uuid::fromString($data['id']),
+            isset($data['created_at']) ? \DateTimeImmutable::createFromFormat('Y-m-d H:i:s', $data['created_at']) : null
         );
-        
         // Set additional properties
-        \->setSlug(\['slug']);
-        \->setIsActive((bool) \['is_active']);
-        \->setSettings(json_decode(\['settings'], true) ?? []);
-        
-        if (isset(\['updated_at'])) {
+        $workspace->setSlug($data['slug']);
+        $workspace->setIsActive((bool) $data['is_active']);
+        $workspace->setSettings(json_decode($data['settings'], true) ?? []);
+        if (isset($data['updated_at'])) {
             // Note: We don't have a setter for updatedAt in the entity, but we could add one
             // For now, we'll note that the entity's updatedAt might not match the DB
         }
-        
-        return \;
+
+        return $workspace;
     }
 }
-
